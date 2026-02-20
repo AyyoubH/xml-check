@@ -1,11 +1,11 @@
 {
   "name": "xml-check",
   "version": "1.0.0",
-  "description": "A CLI tool to validate XML files against XSD schemas",
-  "main": "dist/index.js",
+  "description": "A front-end app to validate XML files against XSD schemas",
   "scripts": {
-    "build": "tsc",
-    "start": "ts-node src/index.ts",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -15,15 +15,15 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/AyyoubH/xml-check/issues"
   },
   "homepage": "https://github.com/AyyoubH/xml-check#readme",
   "dependencies": {
-    "@types/node": "^25.3.0",
-    "libxmljs2": "^0.37.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "xmllint-wasm": "^5.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
   }
 }
