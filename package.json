@@ -1,0 +1,29 @@
+{
+  "name": "xml-check",
+  "version": "1.0.0",
+  "description": "A CLI tool to validate XML files against XSD schemas",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AyyoubH/xml-check.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AyyoubH/xml-check/issues"
+  },
+  "homepage": "https://github.com/AyyoubH/xml-check#readme",
+  "dependencies": {
+    "@types/node": "^25.3.0",
+    "libxmljs2": "^0.37.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
