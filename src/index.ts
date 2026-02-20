@@ -1,92 +1,74 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import * as readline from 'readline';
-import * as libxml from 'libxmljs2';
+import { validateXML } from 'xmllint-wasm';
 
-function readFile(filePath: string): string {
-  const resolved = path.resolve(filePath);
-  if (!fs.existsSync(resolved)) {
-    throw new Error(`File not found: ${resolved}`);
-  }
-  return fs.readFileSync(resolved, 'utf-8');
-}
-
-function loadSchemas(xsdPaths: string[]): libxml.Document[] {
-  return xsdPaths.map((xsdPath) => {
-    const content = readFile(xsdPath);
-    return libxml.parseXml(content);
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+    reader.readAsText(file);
   });
 }
 
-function validateXml(xmlPath: string, schemas: libxml.Document[]): void {
-  const xmlContent = readFile(xmlPath);
-  const xmlDoc = libxml.parseXml(xmlContent);
+function setStatus(message: string, type: 'idle' | 'loading' | 'success' | 'error') {
+  const el = document.getElementById('status')!;
+  el.textContent = message;
+  el.className = `status ${type}`;
+}
 
-  let valid = true;
-  const allErrors: string[] = [];
+function renderErrors(errors: string[]) {
+  const container = document.getElementById('errors')!;
+  container.innerHTML = '';
+  errors.forEach((err) => {
+    const li = document.createElement('li');
+    li.textContent = err;
+    container.appendChild(li);
+  });
+}
 
-  for (const schema of schemas) {
-    const schemaValid = xmlDoc.validate(schema);
-    if (!schemaValid) {
-      valid = false;
-      const errors = xmlDoc.validationErrors.map(
-        (e) => `  Line ${e.line}: ${e.message.trim()}`
-      );
-      allErrors.push(...errors);
+async function handleValidate() {
+  const xmlInput = document.getElementById('xml-file') as HTMLInputElement;
+  const xsdInput = document.getElementById('xsd-files') as HTMLInputElement;
+
+  if (!xmlInput.files || xmlInput.files.length === 0) {
+    setStatus('Please select an XML file.', 'error');
+    return;
+  }
+
+  setStatus('Validating…', 'loading');
+  renderErrors([]);
+
+  try {
+    const xmlContent = await readFileAsText(xmlInput.files[0]);
+
+    const schemaContents: string[] = [];
+    if (xsdInput.files && xsdInput.files.length > 0) {
+      for (const file of Array.from(xsdInput.files)) {
+        schemaContents.push(await readFileAsText(file));
+      }
     }
-  }
 
-  if (valid) {
-    console.log('\n✅ XML is valid against all provided schema(s).');
-  } else {
-    console.log('\n❌ XML is NOT valid. Validation errors:');
-    allErrors.forEach((err) => console.log(err));
-  }
-}
-
-async function promptXmlPath(): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    rl.question('Enter the path to the XML file to validate: ', (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
-}
-
-async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-
-  if (args.length === 0) {
-    console.error(
-      'Usage: npm start -- <schema1.xsd> [schema2.xsd ...]\n' +
-      '    or: node dist/index.js <schema1.xsd> [schema2.xsd ...]'
+    const result = await validateXML(
+      schemaContents.length > 0
+        ? {
+            xml: [{ fileName: xmlInput.files[0].name, contents: xmlContent }],
+            schema: schemaContents,
+          }
+        : {
+            xml: [{ fileName: xmlInput.files[0].name, contents: xmlContent }],
+            normalization: 'format',
+          }
     );
-    process.exit(1);
-  }
 
-  console.log(`Loading ${args.length} schema file(s)...`);
-  let schemas: libxml.Document[];
-  try {
-    schemas = loadSchemas(args);
-    console.log('Schema(s) loaded successfully.');
+    if (result.valid) {
+      setStatus('✅ XML is valid against all provided schema(s).', 'success');
+    } else {
+      const errors = result.errors.map((e) => e.message.trim());
+      setStatus(`❌ XML is NOT valid. ${errors.length} error(s) found:`, 'error');
+      renderErrors(errors);
+    }
   } catch (err) {
-    console.error(`Error loading schema: ${(err as Error).message}`);
-    process.exit(1);
-  }
-
-  const xmlPath = await promptXmlPath();
-
-  try {
-    validateXml(xmlPath, schemas);
-  } catch (err) {
-    console.error(`Error validating XML: ${(err as Error).message}`);
-    process.exit(1);
+    setStatus(`Error: ${(err as Error).message}`, 'error');
   }
 }
 
-main();
+document.getElementById('validate-btn')!.addEventListener('click', handleValidate);

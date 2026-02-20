@@ -1,6 +1,6 @@
 # xml-check
 
-A simple TypeScript CLI app that validates XML files against one or more XSD schemas.
+A front-end web application to validate XML files against XSD schemas — entirely in your browser, no server required.
 
 ## Prerequisites
 
@@ -13,25 +13,35 @@ A simple TypeScript CLI app that validates XML files against one or more XSD sch
 npm install
 ```
 
+## Development
+
+Start the local development server:
+
+```bash
+npm run dev
+```
+
+Then open [http://localhost:5173](http://localhost:5173) in your browser.
+
 ## Usage
 
-Run the app with one or more XSD schema files as arguments. The app will then prompt you for the path of the XML file to validate.
+1. *(Optional)* Select one or more `.xsd` schema files.
+2. Select the `.xml` file you want to validate.
+3. Click **Validate**.
+4. Results are shown immediately — no data leaves your browser.
 
-```bash
-npx ts-node src/index.ts <schema1.xsd> [schema2.xsd ...]
-```
+## Build
 
-### Example
-
-```bash
-npx ts-node src/index.ts schema.xsd
-# Enter the path to the XML file to validate: data.xml
-# ✅ XML is valid against all provided schema(s).
-```
-
-### Build & run compiled version
+Compile and bundle for production:
 
 ```bash
 npm run build
-node dist/index.js <schema1.xsd> [schema2.xsd ...]
+```
+
+The output is placed in the `dist/` directory and can be served by any static file host.
+
+## Preview production build
+
+```bash
+npm run preview
 ```
